@@ -1,2 +1,2 @@
 # trip-split
-custom
+A fun little diddy.
