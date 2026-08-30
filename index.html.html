@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#111827" />
+  <title>Trip Split</title>
+  <style>
+    :root{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#111827;background:#f3f4f6}
+    *{box-sizing:border-box}body{margin:0}.wrap{max-width:680px;margin:0 auto;padding:16px}.card{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:16px;margin:12px 0}.hide{display:none!important}h1{font-size:28px;margin:0 0 4px}.muted{color:#6b7280;font-size:13px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.full{grid-column:1/-1}label{display:block;font-size:13px;font-weight:600;margin-bottom:5px}input,select,button{font:inherit;font-size:16px}input,select{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:10px;background:#fff}button{padding:12px 14px;border:0;border-radius:10px;font-weight:700;cursor:pointer}.primary{background:#111827;color:#fff}.secondary{background:#e5e7eb;color:#111827}.danger{background:#fee2e2;color:#991b1b}.top{display:flex;align-items:center;justify-content:space-between;gap:12px}.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}.splitmode{display:grid;grid-template-columns:1fr 1fr;gap:8px}.customshares{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.restaurant{border:1px solid #d1d5db;border-radius:12px;padding:12px;background:#f9fafb}.restitem{border-top:1px solid #e5e7eb;padding:12px 0}.restitem:first-child{border-top:0}.restpeople{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.restpeople button{padding:8px 10px;border:1px solid #d1d5db;background:#fff}.restpeople button.on{background:#111827;color:#fff}.mini{padding:8px 10px;font-size:14px}.trashitem{padding:12px 0;border-top:1px solid #e5e7eb}.tabs button.active{background:#111827;color:#fff}.people{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.person{padding:11px 8px;text-align:center;border:1px solid #d1d5db;border-radius:10px;cursor:pointer}.person.on{background:#111827;color:#fff}.person input{display:none}.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.expense{padding:13px 0;border-top:1px solid #e5e7eb}.expense:first-child{border-top:0}.amount{font-weight:800;white-space:nowrap}.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.summary>div{background:#f9fafb;border-radius:10px;padding:10px;text-align:center}.settle{padding:11px 0;border-top:1px solid #e5e7eb}.msg{margin-top:10px;font-size:14px}.error{color:#b91c1c}.ok{color:#047857}@media(max-width:520px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.summary{grid-template-columns:1fr}.top{align-items:flex-start}.people{grid-template-columns:1fr}.row{align-items:flex-start}}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <section id="login" class="card">
+    <h1>Trip Split</h1>
+    <div class="muted">Harrison · Adam · Kenny</div>
+    <div style="margin-top:16px"><label for="pass">Trip passphrase</label><input id="pass" type="password" autocomplete="current-password" /></div>
+    <button id="enter" class="primary" style="width:100%;margin-top:10px">Enter</button>
+    <div id="loginMsg" class="msg" aria-live="polite"></div>
+  </section>
+
+  <main id="app" class="hide">
+    <div class="top">
+      <div><h1>Trip Split</h1><div class="muted">Harrison · Adam · Kenny</div></div>
+      <button id="lock" class="secondary">Lock</button>
+    </div>
+    <div class="tabs"><button id="addTab" class="active">Add expense</button><button id="settleTab" class="secondary">Settle up</button><button id="trashTab" class="secondary">Trash</button></div>
+
+    <section id="addPane">
+      <div class="card">
+        <form id="expenseForm">
+          <div class="grid">
+            <div class="full"><label for="desc">Description</label><input id="desc" maxlength="120" required placeholder="Taxi, dinner, tickets…" /></div>
+            <div><label for="amount">Amount</label><input id="amount" type="number" min="0.01" step="0.01" inputmode="decimal" required placeholder="0.00" /></div>
+            <div><label for="currency">Currency</label><select id="currency"><option value="EUR">Euro (EUR)</option><option value="USD">Dollar (USD)</option><option value="ALL">Lek (ALL)</option></select></div>
+            <div class="full"><label for="paid">Paid by</label><select id="paid"><option>Harrison</option><option>Adam</option><option>Kenny</option></select></div>
+            <div class="full"><label>Split type</label><div class="splitmode"><button id="equalMode" type="button" class="primary">Equal split</button><button id="customMode" type="button" class="secondary">Custom amounts</button></div></div>
+            <div id="equalSplitBox" class="full"><label>Split between</label><div class="people">
+              <label class="person on"><input type="checkbox" name="p" value="Harrison" checked />Harrison</label>
+              <label class="person on"><input type="checkbox" name="p" value="Adam" checked />Adam</label>
+              <label class="person on"><input type="checkbox" name="p" value="Kenny" checked />Kenny</label>
+            </div></div>
+            <div class="full"><button id="restaurantHelperBtn" type="button" class="secondary" style="width:100%">Restaurant helper</button></div>
+            <div id="restaurantHelper" class="full restaurant hide">
+              <div class="row"><div><strong>Restaurant helper</strong><div class="muted">Add dishes, choose who shared each, then add tax and tip.</div></div><button id="closeRestaurantHelper" type="button" class="secondary mini">Close</button></div>
+              <div id="restaurantItems" style="margin-top:10px"></div>
+              <button id="addRestaurantItem" type="button" class="secondary mini" style="width:100%;margin-top:8px">+ Add item</button>
+              <div class="grid" style="margin-top:12px">
+                <div><label for="restaurantTax">Tax</label><input id="restaurantTax" type="number" min="0" step="0.01" inputmode="decimal" value="0.00" /></div>
+                <div><label for="restaurantTip">Tip</label><input id="restaurantTip" type="number" min="0" step="0.01" inputmode="decimal" value="0.00" /></div>
+              </div>
+              <div id="restaurantSummary" class="muted" style="margin-top:10px"></div>
+              <button id="applyRestaurantSplit" type="button" class="primary" style="width:100%;margin-top:10px">Apply split to expense</button>
+              <div id="restaurantMsg" class="msg"></div>
+            </div>
+            <div id="customSplitBox" class="full hide"><label>Exact share amounts</label><div class="customshares">
+              <div><label for="shareHarrison">Harrison</label><input id="shareHarrison" type="number" min="0" step="0.01" inputmode="decimal" value="0.00" /></div>
+              <div><label for="shareAdam">Adam</label><input id="shareAdam" type="number" min="0" step="0.01" inputmode="decimal" value="0.00" /></div>
+              <div><label for="shareKenny">Kenny</label><input id="shareKenny" type="number" min="0" step="0.01" inputmode="decimal" value="0.00" /></div>
+            </div><div id="customTotal" class="muted" style="margin-top:6px">Shares must total the expense.</div></div>
+            <div class="full" style="display:flex;gap:8px"><button id="saveBtn" class="primary" style="flex:1">Save expense</button><button id="cancelEdit" type="button" class="secondary hide">Cancel</button></div>
+          </div>
+        </form>
+        <div id="msg" class="msg" aria-live="polite"></div>
+      </div>
+
+      <div class="card">
+        <div class="row"><strong>Expenses</strong><button id="refresh" class="secondary">Refresh</button></div>
+        <div id="expenses"></div>
+      </div>
+    </section>
+
+    <section id="settlePane" class="hide">
+      <div class="card">
+        <strong>Record payment</strong>
+        <p class="muted">Use this when one person actually pays another along the way. Payments are always one-to-one and reduce that pair's running balance.</p>
+        <form id="paymentForm">
+          <div class="grid">
+            <div><label for="paymentPayer">Paid by</label><select id="paymentPayer"><option>Harrison</option><option>Adam</option><option>Kenny</option></select></div>
+            <div><label for="paymentRecipient">Paid to</label><select id="paymentRecipient"><option>Adam</option><option>Harrison</option><option>Kenny</option></select></div>
+            <div><label for="paymentAmount">Amount</label><input id="paymentAmount" type="number" min="0.01" step="0.01" inputmode="decimal" required placeholder="0.00" /></div>
+            <div><label for="paymentCurrency">Currency</label><select id="paymentCurrency"><option value="EUR">Euro (EUR)</option><option value="USD">Dollar (USD)</option><option value="ALL">Lek (ALL)</option></select></div>
+            <div class="full"><label for="paymentNote">Note (optional)</label><input id="paymentNote" maxlength="120" placeholder="Cash repayment, transfer, etc." /></div>
+            <div class="full"><button class="primary" style="width:100%">Record payment</button></div>
+          </div>
+        </form>
+        <div id="paymentMsg" class="msg" aria-live="polite"></div>
+        <div style="margin-top:16px"><strong>Payments</strong><div id="payments"></div></div>
+      </div>
+      <div class="card">
+        <strong>Personal receipt</strong>
+        <p class="muted">Choose a traveler to see what they paid, what they owe, and their net position against each other person.</p>
+        <div style="margin:12px 0"><label for="receiptPerson">Receipt for</label><select id="receiptPerson"><option>Kenny</option><option>Adam</option><option>Harrison</option></select></div>
+        <div id="settlements"></div>
+      </div>
+    </section>
+    <section id="trashPane" class="hide">
+      <div class="card">
+        <div class="row"><div><strong>Trash</strong><div class="muted">Deleted expenses and payments stay here until restored.</div></div><button id="trashRefresh" class="secondary">Refresh</button></div>
+        <div style="margin-top:14px"><strong>Deleted expenses</strong><div id="trashExpenses"></div></div>
+        <div style="margin-top:18px"><strong>Deleted payments</strong><div id="trashPayments"></div></div>
+      </div>
+    </section>
+  </main>
+</div>
+<script>
+const API='https://meqejoohelcupauqeddn.supabase.co/functions/v1/trip-split';
+const $=s=>document.querySelector(s);
+const u=new URL(location.href);const linkKey=u.searchParams.get('key');if(linkKey){localStorage.setItem('tripPw',linkKey);u.searchParams.delete('key');history.replaceState({},'',u.pathname+u.search+u.hash)}
+let pw=localStorage.getItem('tripPw')||'';let items=[];let payments=[];let trashExpenses=[];let trashPayments=[];let editingId=null;let splitMode='equal';
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money=(n,c)=>new Intl.NumberFormat(undefined,{style:'currency',currency:c}).format(n/100);
+async function api(action,payload={}){const r=await fetch(API,{method:'POST',headers:{'content-type':'application/json','x-trip-passphrase':pw},body:JSON.stringify({action,...payload})});let j={};try{j=await r.json()}catch{}if(!r.ok)throw Error(j.error||'Request failed');return j}
+async function login(){pw=$('#pass').value.trim();$('#loginMsg').textContent='';try{await api('list');localStorage.setItem('tripPw',pw);$('#login').classList.add('hide');$('#app').classList.remove('hide');const me=sessionStorage.getItem('tripPerson');if(me)$('#paid').value=me;await load()}catch(e){$('#loginMsg').className='msg error';$('#loginMsg').textContent=e.message;pw=''}}
+async function load(){const data=await api('list');items=data.expenses||[];payments=data.payments||[];trashExpenses=data.trashExpenses||[];trashPayments=data.trashPayments||[];render();renderPayments();renderTrash();settle()}
+function render(){const r=$('#expenses');if(!items.length){r.innerHTML='<p class="muted">No expenses yet.</p>';return}r.innerHTML=items.map(e=>`<div class="expense"><div class="row"><div><strong>${esc(e.description)}</strong><div class="muted">${esc(e.paid_by)} paid · split ${e.participants.map(esc).join(', ')}</div></div><div class="amount">${money(e.amount_cents,e.currency)}</div></div><div style="display:flex;gap:8px;margin-top:8px"><button class="secondary edit" data-id="${e.id}">Edit</button><button class="danger del" data-id="${e.id}">Delete</button></div></div>`).join('');r.querySelectorAll('.edit').forEach(b=>b.addEventListener('click',()=>startEdit(b.dataset.id)));r.querySelectorAll('.del').forEach(b=>b.addEventListener('click',async()=>{if(confirm('Delete this expense?')){await api('delete',{id:b.dataset.id});if(editingId===b.dataset.id)cancelEdit();await load()}}))}
+
+function renderPayments(){const r=$('#payments');if(!payments.length){r.innerHTML='<p class="muted">No payments recorded yet.</p>';return}r.innerHTML=payments.map(p=>`<div class="expense"><div class="row"><div><strong>${esc(p.payer)} → ${esc(p.recipient)}</strong><div class="muted">${p.note?esc(p.note):'Payment'}</div></div><div class="amount">${money(p.amount_cents,p.currency)}</div></div><button class="danger delPayment" data-id="${p.id}" style="margin-top:8px">Delete</button></div>`).join('');r.querySelectorAll('.delPayment').forEach(b=>b.addEventListener('click',async()=>{if(confirm('Delete this payment?')){await api('deletePayment',{id:b.dataset.id});await load()}}))}
+function shares(e){if(e.split_amounts&&typeof e.split_amounts==='object')return e.split_amounts;const q=Math.floor(e.amount_cents/e.participants.length),rem=e.amount_cents%e.participants.length;const out={};e.participants.forEach((p,i)=>out[p]=q+(i<rem?1:0));return out}
+function pairNet(person,other,currency){let net=0;items.filter(e=>e.currency===currency).forEach(e=>{const sh=shares(e);if(e.paid_by===other&&sh[person])net+=sh[person];if(e.paid_by===person&&sh[other])net-=sh[other]});payments.filter(p=>p.currency===currency).forEach(p=>{if(p.payer===person&&p.recipient===other)net-=p.amount_cents;if(p.payer===other&&p.recipient===person)net+=p.amount_cents});return net}
+function settle(){const person=$('#receiptPerson')?.value||'Kenny';const others=['Harrison','Adam','Kenny'].filter(p=>p!==person);let html='';['EUR','USD','ALL'].forEach(c=>{const relevant=items.filter(e=>e.currency===c&&(e.paid_by===person||e.participants.includes(person)));if(!relevant.length)return;const paid=relevant.filter(e=>e.paid_by===person);const owed=relevant.filter(e=>e.paid_by!==person&&e.participants.includes(person));const paidTotal=paid.reduce((a,e)=>a+e.amount_cents,0);const owedTotal=owed.reduce((a,e)=>a+(shares(e)[person]||0),0);html+=`<h3>${c}</h3><div class="summary"><div><span class="muted">Paid</span><br><strong>${money(paidTotal,c)}</strong></div><div><span class="muted">Owe on others' expenses</span><br><strong>${money(owedTotal,c)}</strong></div><div><span class="muted">Relevant expenses</span><br><strong>${relevant.length}</strong></div></div>`;html+='<h4 style="margin-bottom:6px">Paid by '+person+'</h4>';html+=paid.length?paid.map(e=>`<div class="settle"><div><strong>${esc(e.description)}</strong><div class="muted">Split ${e.participants.map(esc).join(', ')}</div></div><span>${money(e.amount_cents,c)}</span></div>`).join(''):'<p class="muted">No expenses paid in this currency.</p>';html+='<h4 style="margin-bottom:6px">'+person+' owes</h4>';html+=owed.length?owed.map(e=>{const sh=shares(e)[person]||0;return `<div class="settle"><div><strong>${esc(e.description)}</strong><div class="muted">Paid by ${esc(e.paid_by)}</div></div><span>${money(sh,c)}</span></div>`}).join(''):'<p class="muted">No shares owed on expenses paid by others.</p>';const personPayments=payments.filter(p=>p.currency===c&&(p.payer===person||p.recipient===person));html+='<h4 style="margin-bottom:6px">Payments sent / received</h4>';html+=personPayments.length?personPayments.map(p=>`<div class="settle"><div><strong>${p.payer===person?'Sent to '+esc(p.recipient):'Received from '+esc(p.payer)}</strong><div class="muted">${p.note?esc(p.note):'Payment'}</div></div><span>${p.payer===person?'-':'+'}${money(p.amount_cents,c)}</span></div>`).join(''):'<p class="muted">No payments recorded in this currency.</p>';html+='<h4 style="margin-bottom:6px">Net position against each person</h4><p class="muted">Positive = '+person+' owes them. Negative = they owe '+person+'.</p>';html+=others.map(o=>{const n=pairNet(person,o,c);return `<div class="settle"><strong>${person} vs ${o}</strong><span class="amount">${n>0?'+':''}${money(n,c)}</span></div>`}).join('')});$('#settlements').innerHTML=html||'<p class="muted">No expenses for '+esc(person)+' yet.</p>'}
+
+const PEOPLE=['Harrison','Adam','Kenny'];
+let restaurantItems=[];
+function addRestaurantItemRow(item={description:'',amount:'',people:['Harrison','Adam','Kenny']}){restaurantItems.push({description:item.description||'',amount:item.amount||'',people:[...(item.people||[])]});renderRestaurantItems()}
+function renderRestaurantItems(){const box=$('#restaurantItems');box.innerHTML=restaurantItems.map((it,idx)=>`<div class="restitem" data-idx="${idx}"><div class="grid"><div><label>Item</label><input class="restDesc" data-idx="${idx}" value="${esc(it.description)}" placeholder="Entrée, appetizer, drinks…"></div><div><label>Amount</label><input class="restAmount" data-idx="${idx}" type="number" min="0" step="0.01" inputmode="decimal" value="${esc(it.amount)}" placeholder="0.00"></div></div><div class="restpeople">${PEOPLE.map(p=>`<button type="button" class="restPerson ${it.people.includes(p)?'on':''}" data-idx="${idx}" data-person="${p}">${p}</button>`).join('')}<button type="button" class="danger mini restRemove" data-idx="${idx}">Remove</button></div></div>`).join('');box.querySelectorAll('.restDesc').forEach(el=>el.addEventListener('input',()=>{restaurantItems[+el.dataset.idx].description=el.value}));box.querySelectorAll('.restAmount').forEach(el=>el.addEventListener('input',()=>{restaurantItems[+el.dataset.idx].amount=el.value;updateRestaurantSummary()}));box.querySelectorAll('.restPerson').forEach(el=>el.addEventListener('click',()=>{const it=restaurantItems[+el.dataset.idx],p=el.dataset.person;it.people=it.people.includes(p)?it.people.filter(x=>x!==p):[...it.people,p];renderRestaurantItems();updateRestaurantSummary()}));box.querySelectorAll('.restRemove').forEach(el=>el.addEventListener('click',()=>{restaurantItems.splice(+el.dataset.idx,1);renderRestaurantItems();updateRestaurantSummary()}));updateRestaurantSummary()}
+function restaurantCalc(){const subtotal={Harrison:0,Adam:0,Kenny:0};let food=0;for(const it of restaurantItems){const cents=Math.round(Number(it.amount||0)*100);if(cents<=0)continue;if(!it.people.length)throw Error('Every priced item needs at least one person.');food+=cents;const q=Math.floor(cents/it.people.length),r=cents%it.people.length;it.people.forEach((p,i)=>subtotal[p]+=q+(i<r?1:0))}const tax=Math.round(Number($('#restaurantTax').value||0)*100),tip=Math.round(Number($('#restaurantTip').value||0)*100);if(food<=0)throw Error('Add at least one priced item.');const extras=tax+tip,total=food+extras,final={...subtotal};let assigned=0;PEOPLE.forEach((p,i)=>{let add=0;if(i===PEOPLE.length-1)add=extras-assigned;else{add=Math.round(extras*(subtotal[p]/food));assigned+=add}final[p]+=add});return{food,tax,tip,total,subtotal,final}}
+function updateRestaurantSummary(){try{const x=restaurantCalc();$('#restaurantSummary').innerHTML=`Items: <strong>${money(x.food,$('#currency').value)}</strong> · Tax: <strong>${money(x.tax,$('#currency').value)}</strong> · Tip: <strong>${money(x.tip,$('#currency').value)}</strong><br>Final: ${PEOPLE.map(p=>`${p} <strong>${money(x.final[p],$('#currency').value)}</strong>`).join(' · ')}`;$('#restaurantMsg').textContent=''}catch(e){$('#restaurantSummary').textContent='Add items and choose who shared them.'}}
+function openRestaurantHelper(){if(!restaurantItems.length)addRestaurantItemRow();$('#restaurantHelper').classList.remove('hide');updateRestaurantSummary()}
+function closeRestaurantHelper(){$('#restaurantHelper').classList.add('hide')}
+
+function setParticipants(names){document.querySelectorAll('input[name=p]').forEach(i=>{i.checked=names.includes(i.value);i.parentElement.classList.toggle('on',i.checked)})}
+function setSplitMode(mode){splitMode=mode;const custom=mode==='custom';$('#equalMode').className=custom?'secondary':'primary';$('#customMode').className=custom?'primary':'secondary';$('#equalSplitBox').classList.toggle('hide',custom);$('#customSplitBox').classList.toggle('hide',!custom);updateCustomTotal()}
+function customSplit(){const vals={Harrison:Math.round(Number($('#shareHarrison').value||0)*100),Adam:Math.round(Number($('#shareAdam').value||0)*100),Kenny:Math.round(Number($('#shareKenny').value||0)*100)};return vals}
+function updateCustomTotal(){if(splitMode!=='custom')return;const vals=customSplit();const sum=Object.values(vals).reduce((a,b)=>a+b,0);const total=Math.round(Number($('#amount').value||0)*100);$('#customTotal').textContent='Shares: '+money(sum,$('#currency').value)+' / Expense: '+money(total,$('#currency').value);$('#customTotal').className='muted'+(sum===total&&total>0?' ok':'')}
+function renderTrash(){const ex=$('#trashExpenses'),pay=$('#trashPayments');ex.innerHTML=trashExpenses.length?trashExpenses.map(e=>`<div class="trashitem"><div class="row"><div><strong>${esc(e.description)}</strong><div class="muted">${esc(e.paid_by)} paid · ${money(e.amount_cents,e.currency)}</div></div><button class="secondary restoreExpense" data-id="${e.id}">Restore</button></div></div>`).join(''):'<p class="muted">No deleted expenses.</p>';pay.innerHTML=trashPayments.length?trashPayments.map(p=>`<div class="trashitem"><div class="row"><div><strong>${esc(p.payer)} → ${esc(p.recipient)}</strong><div class="muted">${money(p.amount_cents,p.currency)}${p.note?' · '+esc(p.note):''}</div></div><button class="secondary restorePayment" data-id="${p.id}">Restore</button></div></div>`).join(''):'<p class="muted">No deleted payments.</p>';ex.querySelectorAll('.restoreExpense').forEach(b=>b.addEventListener('click',async()=>{await api('restoreExpense',{id:b.dataset.id});await load()}));pay.querySelectorAll('.restorePayment').forEach(b=>b.addEventListener('click',async()=>{await api('restorePayment',{id:b.dataset.id});await load()}))}
+
+function startEdit(id){const e=items.find(x=>x.id===id);if(!e)return;editingId=id;$('#desc').value=e.description;$('#amount').value=(e.amount_cents/100).toFixed(2);$('#currency').value=e.currency;$('#paid').value=e.paid_by;if(e.split_amounts){setSplitMode('custom');$('#shareHarrison').value=((e.split_amounts.Harrison||0)/100).toFixed(2);$('#shareAdam').value=((e.split_amounts.Adam||0)/100).toFixed(2);$('#shareKenny').value=((e.split_amounts.Kenny||0)/100).toFixed(2);setParticipants(Object.keys(e.split_amounts).filter(k=>e.split_amounts[k]>0))}else{setSplitMode('equal');setParticipants(e.participants)}$('#saveBtn').textContent='Update expense';$('#cancelEdit').classList.remove('hide');$('#msg').textContent='Editing expense.';$('#desc').focus();window.scrollTo({top:0,behavior:'smooth'})}
+function cancelEdit(){editingId=null;$('#expenseForm').reset();setParticipants(['Harrison','Adam','Kenny']);setSplitMode('equal');const me=sessionStorage.getItem('tripPerson');if(me)$('#paid').value=me;$('#currency').value='EUR';$('#saveBtn').textContent='Save expense';$('#cancelEdit').classList.add('hide');$('#msg').textContent=''}
+
+$('#enter').addEventListener('click',login);$('#pass').addEventListener('keydown',e=>{if(e.key==='Enter')login()});$('#lock').addEventListener('click',()=>{localStorage.removeItem('tripPw');sessionStorage.removeItem('tripPerson');location.reload()});$('#refresh').addEventListener('click',load);$('#cancelEdit').addEventListener('click',cancelEdit);
+$('#restaurantHelperBtn').addEventListener('click',openRestaurantHelper);$('#closeRestaurantHelper').addEventListener('click',closeRestaurantHelper);$('#addRestaurantItem').addEventListener('click',()=>addRestaurantItemRow());['restaurantTax','restaurantTip'].forEach(id=>$('#'+id).addEventListener('input',updateRestaurantSummary));$('#currency').addEventListener('change',updateRestaurantSummary);$('#applyRestaurantSplit').addEventListener('click',()=>{try{const x=restaurantCalc();$('#amount').value=(x.total/100).toFixed(2);setSplitMode('custom');$('#shareHarrison').value=(x.final.Harrison/100).toFixed(2);$('#shareAdam').value=(x.final.Adam/100).toFixed(2);$('#shareKenny').value=(x.final.Kenny/100).toFixed(2);setParticipants(PEOPLE.filter(p=>x.final[p]>0));updateCustomTotal();$('#restaurantMsg').className='msg ok';$('#restaurantMsg').textContent='Applied to custom split. Review and save the expense normally.';closeRestaurantHelper()}catch(err){$('#restaurantMsg').className='msg error';$('#restaurantMsg').textContent=err.message}});
+document.querySelectorAll('.person input').forEach(i=>i.addEventListener('change',()=>i.parentElement.classList.toggle('on',i.checked)));$('#equalMode').addEventListener('click',()=>setSplitMode('equal'));$('#customMode').addEventListener('click',()=>setSplitMode('custom'));['amount','currency','shareHarrison','shareAdam','shareKenny'].forEach(id=>$('#'+id).addEventListener('input',updateCustomTotal));
+$('#expenseForm').addEventListener('submit',async e=>{e.preventDefault();const amount_cents=Math.round(Number($('#amount').value)*100);let participants=[...document.querySelectorAll('input[name=p]:checked')].map(x=>x.value);let split_amounts=null;if(splitMode==='custom'){split_amounts=customSplit();const sum=Object.values(split_amounts).reduce((a,b)=>a+b,0);if(sum!==amount_cents){$('#msg').className='msg error';$('#msg').textContent='Custom shares must add exactly to the expense amount.';return}participants=Object.entries(split_amounts).filter(([,v])=>v>0).map(([k])=>k);if(!participants.length){$('#msg').className='msg error';$('#msg').textContent='At least one custom share must be greater than zero.';return}}else if(!participants.length){$('#msg').className='msg error';$('#msg').textContent='Choose at least one person.';return}const expense={description:$('#desc').value.trim(),amount_cents,currency:$('#currency').value,paid_by:$('#paid').value,participants,split_amounts};try{if(editingId){await api('update',{id:editingId,expense});$('#msg').className='msg ok';$('#msg').textContent='Updated.'}else{await api('add',{expense});$('#msg').className='msg ok';$('#msg').textContent='Saved.'}sessionStorage.setItem('tripPerson',$('#paid').value);editingId=null;$('#expenseForm').reset();setParticipants(['Harrison','Adam','Kenny']);setSplitMode('equal');$('#paid').value=sessionStorage.getItem('tripPerson')||'Harrison';$('#currency').value='EUR';$('#saveBtn').textContent='Save expense';$('#cancelEdit').classList.add('hide');await load()}catch(err){$('#msg').className='msg error';$('#msg').textContent=err.message}});
+$('#paymentForm').addEventListener('submit',async e=>{e.preventDefault();const payer=$('#paymentPayer').value,recipient=$('#paymentRecipient').value;if(payer===recipient){$('#paymentMsg').className='msg error';$('#paymentMsg').textContent='Payer and recipient must be different.';return}const amount_cents=Math.round(Number($('#paymentAmount').value)*100);const payment={payer,recipient,amount_cents,currency:$('#paymentCurrency').value,note:$('#paymentNote').value.trim()};try{await api('addPayment',{payment});$('#paymentMsg').className='msg ok';$('#paymentMsg').textContent='Payment recorded.';$('#paymentAmount').value='';$('#paymentNote').value='';await load()}catch(err){$('#paymentMsg').className='msg error';$('#paymentMsg').textContent=err.message}});
+$('#paymentPayer').addEventListener('change',()=>{if($('#paymentRecipient').value===$('#paymentPayer').value){$('#paymentRecipient').value=['Harrison','Adam','Kenny'].find(x=>x!==$('#paymentPayer').value)}});
+function showPane(which){for(const [tab,pane] of [['addTab','addPane'],['settleTab','settlePane'],['trashTab','trashPane']]){$('#'+tab).classList.toggle('active',tab===which+'Tab');$('#'+pane).classList.toggle('hide',pane!==which+'Pane')}}
+$('#addTab').addEventListener('click',()=>showPane('add'));$('#trashTab').addEventListener('click',()=>{showPane('trash');renderTrash()});$('#trashRefresh').addEventListener('click',load);
+$('#receiptPerson').addEventListener('change',settle);
+$('#settleTab').addEventListener('click',()=>{showPane('settle');settle()});
+if(pw){api('list').then(()=>{$('#login').classList.add('hide');$('#app').classList.remove('hide');load()}).catch(()=>localStorage.removeItem('tripPw'))}
+</script>
+</body>
+</html>
